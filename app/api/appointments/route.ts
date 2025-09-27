@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     // Check if doctor is available on this day
     const dayAvailability = doctor.availableSlots.find(
-      (slot: { day: string; }) => slot.day === dayOfWeek
+      (slot: { day: string }) => slot.day === dayOfWeek
     );
     if (
       !dayAvailability ||
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     // Check if date is blocked
     const isBlocked = doctor.blockedDates.some(
-      (blockedDate: { toDateString: () => string; }) =>
+      (blockedDate: { toDateString: () => string }) =>
         blockedDate.toDateString() === appointmentDate.toDateString()
     );
     if (isBlocked) {

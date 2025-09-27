@@ -14,8 +14,10 @@ export async function POST(request: NextRequest) {
     const result = await NotificationService.sendBulkReminders();
 
     return NextResponse.json({
-      success: true,
-      message: "Bulk reminders processed",
+      ...(result && !("success" in result) ? { success: true } : {}),
+      ...(result && !("message" in result)
+        ? { message: "Bulk reminders processed" }
+        : {}),
       ...result,
     });
   } catch (error: any) {
