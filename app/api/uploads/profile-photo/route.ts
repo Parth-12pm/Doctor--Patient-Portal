@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSessionData();
+    const session = (await getServerSessionData()) as Session;
     if (!session) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }

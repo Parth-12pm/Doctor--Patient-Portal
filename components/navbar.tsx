@@ -138,10 +138,7 @@ export function Navbar() {
                     className="relative h-10 w-10 rounded-full hover:bg-secondary"
                   >
                     <Avatar className="h-10 w-10 border-2 border-border">
-                      <AvatarImage
-                        src={session.user?.profilePhoto || "/placeholder.svg"}
-                        alt="Profile"
-                      />
+                      <AvatarImage src={"/placeholder.svg"} alt="Profile" />
                       <AvatarFallback className="bg-accent text-accent-foreground font-semibold">
                         {getInitials(
                           session.user?.name ?? session.user?.email ?? undefined

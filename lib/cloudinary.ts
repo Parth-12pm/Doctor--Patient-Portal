@@ -72,9 +72,12 @@ export async function deleteFromCloudinary(public_id: string) {
     const result = await cloudinary.uploader.destroy(public_id);
     console.log("  File deleted from Cloudinary:", public_id);
     return { success: true, result };
-  } catch (error) {
+  } catch (error: any) {
     console.error("  Cloudinary deletion failed:", error);
-    return { success: false, error: error.message };
+    return {
+      success: false,
+      error: error.message || "An unknown error occurred",
+    };
   }
 }
 

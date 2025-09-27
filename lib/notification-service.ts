@@ -111,7 +111,7 @@ export class NotificationService {
         appointmentId
       );
       return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error("  Notification service error:", error);
       return { success: false, error: error.message };
     }
@@ -161,7 +161,7 @@ export class NotificationService {
         successful,
         failed,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error("  Bulk reminder error:", error);
       return { success: false, error: error.message };
     }
