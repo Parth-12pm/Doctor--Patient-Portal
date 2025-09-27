@@ -1,33 +1,39 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { ArrowLeft, Save, User, Upload, X } from "lucide-react"
-import Link from "next/link"
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ArrowLeft, Save, User, Upload, X } from "lucide-react";
+import Link from "next/link";
 
 interface DoctorFormData {
-  name: string
-  speciality: string
-  post: string
-  experience: string
-  qualifications: string
-  consultationFee: string
-  clinicAddress: string
-  profilePhoto: string
+  name: string;
+  speciality: string;
+  post: string;
+  experience: string;
+  qualifications: string;
+  consultationFee: string;
+  clinicAddress: string;
+  profilePhoto: string;
 }
 
 export default function DoctorProfilePage() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [formData, setFormData] = useState<DoctorFormData>({
     name: "",
     speciality: "",
@@ -37,63 +43,71 @@ export default function DoctorProfilePage() {
     consultationFee: "",
     clinicAddress: "",
     profilePhoto: "",
-  })
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
-  const [isEditing, setIsEditing] = useState(false)
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [hasProfile, setHasProfile] = useState(false);
 
   useEffect(() => {
-    if (status === "loading") return
+    if (status === "loading") return;
 
     if (!session) {
-      router.push("/login")
-      return
+      router.push("/login");
+      return;
     }
 
     if (session.user.role !== "doctor") {
-      router.push("/dashboard")
-      return
+      router.push("/dashboard");
+      return;
     }
 
-    fetchProfile()
-  }, [session, status, router])
+    fetchProfile();
+  }, [session, status, router]);
 
   const fetchProfile = async () => {
     try {
-      const response = await fetch("/api/doctors/profile")
+      const response = await fetch("/api/doctors/profile");
+      const data = await response.json();
+
       if (response.ok) {
-        const data = await response.json()
-        const doctor = data.doctor
-        setFormData({
-          name: doctor.name || "",
-          speciality: doctor.speciality || "",
-          post: doctor.post || "",
-          experience: doctor.experience?.toString() || "",
-          qualifications: doctor.qualifications || "",
-          consultationFee: doctor.consultationFee?.toString() || "",
-          clinicAddress: doctor.clinicAddress || "",
-          profilePhoto: doctor.profilePhoto || "",
-        })
-        setIsEditing(true)
-      } else if (response.status === 404) {
-        // Profile doesn't exist, user can create one
-        setIsEditing(false)
+        setHasProfile(data.hasProfile);
+
+        if (data.doctor) {
+          const doctor = data.doctor;
+          setFormData({
+            name: doctor.name || "",
+            speciality: doctor.speciality || "",
+            post: doctor.post || "",
+            experience: doctor.experience?.toString() || "",
+            qualifications: doctor.qualifications || "",
+            consultationFee: doctor.consultationFee?.toString() || "",
+            clinicAddress: doctor.clinicAddress || "",
+            profilePhoto: doctor.profilePhoto || "",
+          });
+          setIsEditing(true);
+        } else {
+          // No profile exists, user can create one
+          setIsEditing(false);
+        }
+      } else {
+        console.error("Error fetching profile:", data.error);
       }
     } catch (error) {
-      console.error("Error fetching profile:", error)
+      console.error("Error fetching profile:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSaving(true)
-    setError("")
-    setSuccess("")
+    e.preventDefault();
+    setIsSaving(true);
+    setError("");
+    setSuccess("");
 
     try {
       const payload = {
@@ -104,94 +118,156 @@ export default function DoctorProfilePage() {
         qualifications: formData.qualifications,
         consultationFee: Number.parseFloat(formData.consultationFee),
         clinicAddress: formData.clinicAddress,
-      }
+      };
 
-      const method = isEditing ? "PUT" : "POST"
+      const method = isEditing ? "PUT" : "POST";
       const response = await fetch("/api/doctors/profile", {
         method,
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
-        setSuccess(isEditing ? "Profile updated successfully!" : "Profile created successfully!")
-        setIsEditing(true)
+        setSuccess(
+          isEditing
+            ? "Profile updated successfully!"
+            : "Profile created successfully!"
+        );
+        setIsEditing(true);
+        setHasProfile(true);
         setTimeout(() => {
-          router.push("/doctor/dashboard")
-        }, 2000)
+          router.push("/doctor/dashboard");
+        }, 2000);
       } else {
-        setError(data.error || "Failed to save profile")
+        setError(data.error || "Failed to save profile");
       }
     } catch (error) {
-      setError("An error occurred. Please try again.")
+      setError("An error occurred. Please try again.");
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    setIsUploading(true)
-    setError("")
+    // Check if profile exists first
+    if (!hasProfile) {
+      setError("Please create your profile first before uploading a photo.");
+      return;
+    }
+
+    setIsUploading(true);
+    setError("");
+
+    const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    if (!CLOUD_NAME) {
+      setError("Cloudinary configuration is missing.");
+      setIsUploading(false);
+      return;
+    }
 
     try {
-      const formData = new FormData()
-      formData.append("photo", file)
-
-      const response = await fetch("/api/uploads/profile-photo", {
+      // 1. Get signature from our server
+      const signResponse = await fetch("/api/uploads/sign-upload", {
         method: "POST",
-        body: formData,
-      })
+      });
+      const signData = await signResponse.json();
+      if (!signResponse.ok) throw new Error(signData.error);
 
-      const data = await response.json()
+      // 2. Upload directly to Cloudinary
+      const uploadFormData = new FormData();
+      uploadFormData.append("file", file);
+      uploadFormData.append(
+        "api_key",
+        process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY!
+      );
+      uploadFormData.append("timestamp", signData.timestamp);
+      uploadFormData.append("signature", signData.signature);
+      uploadFormData.append("public_id", signData.public_id);
+      uploadFormData.append("folder", signData.folder);
+      uploadFormData.append("transformation", signData.transformation);
 
-      if (response.ok) {
-        setFormData((prev) => ({ ...prev, profilePhoto: data.photoUrl }))
-        setSuccess("Profile photo uploaded successfully!")
+      const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
+      const uploadResponse = await fetch(uploadUrl, {
+        method: "POST",
+        body: uploadFormData,
+      });
+
+      const uploadData = await uploadResponse.json();
+      if (!uploadResponse.ok) throw new Error(uploadData.error.message);
+
+      // 3. Update our database with the new URL
+      const dbUpdateResponse = await fetch("/api/uploads/profile-photo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          photoUrl: uploadData.secure_url,
+          publicId: uploadData.public_id,
+        }),
+      });
+
+      if (dbUpdateResponse.ok) {
+        setFormData((prev) => ({
+          ...prev,
+          profilePhoto: uploadData.secure_url,
+        }));
+        setSuccess("Profile photo uploaded successfully!");
       } else {
-        setError(data.error || "Failed to upload photo")
+        const dbError = await dbUpdateResponse.json();
+        throw new Error(dbError.error || "Failed to save photo URL.");
       }
     } catch (error) {
-      setError("Failed to upload photo")
+      setError("Failed to upload photo");
     } finally {
-      setIsUploading(false)
+      setIsUploading(false);
     }
-  }
+  };
 
   const handlePhotoDelete = async () => {
+    if (!hasProfile) {
+      setError("No profile found.");
+      return;
+    }
+
+    setIsSaving(true); // Use isSaving for visual feedback
     try {
       const response = await fetch("/api/uploads/profile-photo", {
         method: "DELETE",
-      })
+      });
 
       if (response.ok) {
-        setFormData((prev) => ({ ...prev, profilePhoto: "" }))
-        setSuccess("Profile photo deleted successfully!")
+        setFormData((prev) => ({ ...prev, profilePhoto: "" }));
+        setSuccess("Profile photo deleted successfully!");
+      } else {
+        const data = await response.json();
+        setError(data.error || "Failed to delete photo");
       }
     } catch (error) {
-      setError("Failed to delete photo")
+      setError("Failed to delete photo");
+    } finally {
+      setIsSaving(false);
     }
-  }
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
-    }))
-  }
+    }));
+  };
 
   if (status === "loading" || isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
       </div>
-    )
+    );
   }
 
   return (
@@ -210,7 +286,9 @@ export default function DoctorProfilePage() {
               {isEditing ? "Edit Profile" : "Complete Your Profile"}
             </h1>
             <p className="text-muted-foreground mt-1">
-              {isEditing ? "Update your professional information" : "Please fill in your professional details"}
+              {isEditing
+                ? "Update your professional information"
+                : "Please fill in your professional details"}
             </p>
           </div>
         </div>
@@ -221,7 +299,10 @@ export default function DoctorProfilePage() {
               <User className="h-5 w-5" />
               Professional Information
             </CardTitle>
-            <CardDescription>This information will be visible to patients when booking appointments</CardDescription>
+            <CardDescription>
+              This information will be visible to patients when booking
+              appointments
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -233,13 +314,23 @@ export default function DoctorProfilePage() {
 
               {success && (
                 <Alert className="border-green-200 bg-green-50">
-                  <AlertDescription className="text-green-800">{success}</AlertDescription>
+                  <AlertDescription className="text-green-800">
+                    {success}
+                  </AlertDescription>
                 </Alert>
               )}
 
               {/* Profile Photo */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Profile Photo</h3>
+                {!hasProfile && (
+                  <Alert className="border-orange-200 bg-orange-50">
+                    <AlertDescription className="text-orange-800">
+                      Please save your profile details first before uploading a
+                      photo.
+                    </AlertDescription>
+                  </Alert>
+                )}
                 <div className="flex items-center gap-4">
                   {formData.profilePhoto ? (
                     <div className="relative">
@@ -248,15 +339,18 @@ export default function DoctorProfilePage() {
                         alt="Profile"
                         className="w-24 h-24 rounded-full object-cover border-2 border-border"
                       />
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="destructive"
-                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
-                        onClick={handlePhotoDelete}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
+                      {hasProfile && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="destructive"
+                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                          onClick={handlePhotoDelete}
+                          disabled={isSaving}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      )}
                     </div>
                   ) : (
                     <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center border-2 border-dashed border-border">
@@ -265,15 +359,29 @@ export default function DoctorProfilePage() {
                   )}
                   <div>
                     <Label htmlFor="photo" className="cursor-pointer">
-                      <Button type="button" variant="outline" disabled={isUploading} asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={isUploading || !hasProfile}
+                        asChild
+                      >
                         <span>
                           <Upload className="h-4 w-4 mr-2" />
                           {isUploading ? "Uploading..." : "Upload Photo"}
                         </span>
                       </Button>
                     </Label>
-                    <Input id="photo" type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
-                    <p className="text-xs text-muted-foreground mt-1">JPG, PNG or GIF. Max size 5MB.</p>
+                    <Input
+                      id="photo"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handlePhotoUpload}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      JPG, PNG or GIF. Max size 5MB.{" "}
+                      {!hasProfile && "(Available after saving profile)"}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -288,7 +396,9 @@ export default function DoctorProfilePage() {
                     <Input
                       id="name"
                       value={formData.name}
-                      onChange={(e) => handleInputChange("name", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("name", e.target.value)
+                      }
                       required
                     />
                   </div>
@@ -299,7 +409,9 @@ export default function DoctorProfilePage() {
                       id="speciality"
                       placeholder="e.g., Cardiologist, Pediatrician"
                       value={formData.speciality}
-                      onChange={(e) => handleInputChange("speciality", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("speciality", e.target.value)
+                      }
                       required
                     />
                   </div>
@@ -310,7 +422,9 @@ export default function DoctorProfilePage() {
                       id="post"
                       placeholder="e.g., Senior Consultant, Resident"
                       value={formData.post}
-                      onChange={(e) => handleInputChange("post", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("post", e.target.value)
+                      }
                       required
                     />
                   </div>
@@ -323,20 +437,26 @@ export default function DoctorProfilePage() {
                       min="0"
                       max="60"
                       value={formData.experience}
-                      onChange={(e) => handleInputChange("experience", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("experience", e.target.value)
+                      }
                       required
                     />
                   </div>
 
                   <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="consultationFee">Consultation Fee ($) *</Label>
+                    <Label htmlFor="consultationFee">
+                      Consultation Fee ($) *
+                    </Label>
                     <Input
                       id="consultationFee"
                       type="number"
                       min="0"
                       step="0.01"
                       value={formData.consultationFee}
-                      onChange={(e) => handleInputChange("consultationFee", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("consultationFee", e.target.value)
+                      }
                       required
                     />
                   </div>
@@ -353,7 +473,9 @@ export default function DoctorProfilePage() {
                     id="qualifications"
                     placeholder="e.g., MBBS, MD (Cardiology), Fellowship in Interventional Cardiology"
                     value={formData.qualifications}
-                    onChange={(e) => handleInputChange("qualifications", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("qualifications", e.target.value)
+                    }
                     rows={3}
                     required
                   />
@@ -365,7 +487,9 @@ export default function DoctorProfilePage() {
                     id="clinicAddress"
                     placeholder="Full clinic/hospital address"
                     value={formData.clinicAddress}
-                    onChange={(e) => handleInputChange("clinicAddress", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("clinicAddress", e.target.value)
+                    }
                     rows={3}
                     required
                   />
@@ -397,5 +521,5 @@ export default function DoctorProfilePage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

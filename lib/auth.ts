@@ -1,16 +1,12 @@
-import NextAuth from "next-auth"
-import CredentialsProvider from "next-auth/providers/credentials"
-import { MongoDBAdapter } from "@next-auth/mongodb-adapter"
-import { MongoClient } from "mongodb"
-import bcrypt from "bcryptjs"
-import dbConnect from "./db"
-import User from "@/models/User"
+import { NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
+import dbConnect from "@/lib/db";
+import User from "@/models/User";
+import Doctor from "@/models/Doctor";
+import Patient from "@/models/Patient";
 
-const client = new MongoClient(process.env.MONGODB_URI!)
-const clientPromise = client.connect()
-
-export const authOptions = {
-  adapter: MongoDBAdapter(clientPromise),
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -20,55 +16,96 @@ export const authOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          return null
+          return null;
         }
 
-        await dbConnect()
+        try {
+          await dbConnect();
 
-        const user = await User.findOne({ email: credentials.email })
-        if (!user) {
-          return null
-        }
+          const user = await User.findOne({ email: credentials.email });
 
-        const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
-        if (!isPasswordValid) {
-          return null
-        }
+          if (!user) {
+            return null;
+          }
 
-        return {
-          id: user._id.toString(),
-          email: user.email,
-          role: user.role,
-          isProfileComplete: user.isProfileComplete,
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            user.password
+          );
+
+          if (!isPasswordValid) {
+            return null;
+          }
+
+          let profilePhoto: string | undefined = undefined;
+          if (user.isProfileComplete) {
+            if (user.role === "doctor") {
+              const doctor = (await Doctor.findOne({
+                userId: user._id,
+              }).lean()) as { profilePhoto?: string } | null;
+              if (doctor) {
+                profilePhoto = doctor.profilePhoto;
+              }
+            } else if (user.role === "patient") {
+              const patient = (await Patient.findOne({
+                userId: user._id,
+              }).lean()) as { profilePhoto?: string } | null;
+              if (patient) {
+                profilePhoto = patient.profilePhoto;
+              }
+            }
+          }
+
+          return {
+            id: user._id.toString(),
+            email: user.email,
+            role: user.role,
+            isProfileComplete: user.isProfileComplete,
+            profilePhoto: profilePhoto,
+          };
+        } catch (error) {
+          console.error("Authorization error:", error);
+          return null;
         }
       },
     }),
   ],
   session: {
-    strategy: "jwt" as const,
-    maxAge: 60 * 60 * 24 * 7, // 7 days
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role
-        token.isProfileComplete = user.isProfileComplete
+        token.id = user.id;
+        token.role = user.role;
+        token.isProfileComplete = user.isProfileComplete;
+        token.profilePhoto = user.profilePhoto;
       }
-      return token
+      return token;
     },
     async session({ session, token }) {
       if (token) {
-        session.user.id = token.sub!
-        session.user.role = token.role as string
-        session.user.isProfileComplete = token.isProfileComplete as boolean
+        session.user.id = token.id;
+        session.user.role = token.role;
+        session.user.isProfileComplete = token.isProfileComplete;
+        session.user.profilePhoto = token.profilePhoto;
       }
-      return session
+      return session;
+    },
+  },
+  events: {
+    async signIn({ user }) {
+      // This event can be used to update the session if the profile photo changes
+      // For now, we'll just log it. A more advanced implementation could
+      // re-fetch the profile photo here.
+      if (user) {
+        // console.log("User signed in:", user.email);
+      }
     },
   },
   pages: {
     signIn: "/login",
-    signUp: "/register",
   },
-}
-
-export default NextAuth(authOptions)
+  secret: process.env.NEXTAUTH_SECRET,
+};

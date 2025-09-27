@@ -33,12 +33,14 @@ export const doctorProfileSchema = z.object({
   consultationFee: z.number().min(0, "Consultation fee must be positive"),
   clinicAddress: z.string().min(10, "Clinic address is required"),
   profilePhoto: z.string().optional(),
-  availableSlots: z.array(
-    z.object({
-      day: z.enum(["monday", "tuesday", "wednesday", "thursday", "friday"]),
-      timeSlots: z.array(z.string()),
-    }),
-  ),
+  availableSlots: z
+    .array(
+      z.object({
+        day: z.enum(["monday", "tuesday", "wednesday", "thursday", "friday"]),
+        timeSlots: z.array(z.string()),
+      }),
+    )
+    .optional(),
 })
 
 export const appointmentSchema = z.object({

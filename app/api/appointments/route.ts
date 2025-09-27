@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { appointmentSchema } from "@/lib/validations";
 import { requireRole } from "@/lib/auth-utils";
+import { type Session } from "next-auth";
 import dbConnect from "@/lib/db";
 import Appointment from "@/models/Appointment";
 import Doctor from "@/models/Doctor";
@@ -9,7 +10,7 @@ import { MAX_APPOINTMENTS_PER_DAY } from "@/lib/constants";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireRole("patient");
+    const session = (await requireRole("patient")) as Session;
     await dbConnect();
 
     const body = await request.json();
@@ -138,7 +139,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireRole("patient");
+    const session = (await requireRole("patient")) as Session;
     await dbConnect();
 
     const { searchParams } = new URL(request.url);
