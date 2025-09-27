@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth-utils";
 import { NotificationService } from "@/lib/notification-service";
 import { z } from "zod";
+import { type Session } from "next-auth";
 
 const notificationSchema = z.object({
   appointmentId: z.string().min(1, "Appointment ID is required"),
@@ -10,7 +11,7 @@ const notificationSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireRole("doctor");
+    const session = (await requireRole("doctor")) as Session;
 
     const body = await request.json();
     const validatedData = notificationSchema.parse(body);

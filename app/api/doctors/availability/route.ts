@@ -3,10 +3,11 @@ import { requireRole } from "@/lib/auth-utils";
 import dbConnect from "@/lib/db";
 import Doctor from "@/models/Doctor";
 import { WORKING_DAYS, TIME_SLOTS } from "@/lib/constants";
+import { type Session } from "next-auth";
 
 export async function PUT(request: NextRequest) {
   try {
-    const session = await requireRole("doctor");
+    const session = (await requireRole("doctor")) as Session;
     await dbConnect();
 
     const body = await request.json();
@@ -73,7 +74,7 @@ export async function PUT(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireRole("doctor");
+    const session = (await requireRole("doctor")) as Session;
     await dbConnect();
 
     const doctor = await Doctor.findOne({ userId: session.user.id }).select(
