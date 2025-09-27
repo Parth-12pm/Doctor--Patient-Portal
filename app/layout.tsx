@@ -1,8 +1,6 @@
 import type React from "react";
 import type { Metadata } from "next";
 import { AuthProvider } from "@/components/auth-provider";
-import { ThemeProvider } from "@/components/theme-provider";
-import { Navbar } from "@/components/navbar";
 import "./globals.css";
 import { Suspense } from "react";
 
@@ -19,21 +17,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <body>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <Suspense fallback={<div>Loading...</div>}>
-            <AuthProvider>
-              <Navbar />
-              <main>{children}</main>
-            </AuthProvider>
-          </Suspense>
-        </ThemeProvider>
+        <Suspense fallback={<div>Loading...</div>}>
+          <AuthProvider>{children}</AuthProvider>
+        </Suspense>
       </body>
     </html>
   );

@@ -183,12 +183,12 @@ export default function DoctorDashboard() {
 
         {/* Profile Status Alert */}
         {!profile && (
-          <Card className="mb-6 border-warning/20 bg-warning/10 dark:border-warning/30 dark:bg-warning/5">
+          <Card className="mb-6 border-orange-200 bg-orange-50">
             <CardContent className="flex items-center gap-3 pt-6">
-              <AlertCircle className="h-5 w-5 text-warning-foreground" />
+              <AlertCircle className="h-5 w-5 text-orange-600" />
               <div className="flex-1">
-                <p className="text-warning-foreground font-medium">Complete your profile</p>
-                <p className="text-warning-foreground/80 text-sm">
+                <p className="text-orange-800 font-medium">Complete your profile</p>
+                <p className="text-orange-700 text-sm">
                   Please complete your professional profile to start accepting appointments
                 </p>
               </div>
@@ -208,8 +208,8 @@ export default function DoctorDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card>
                 <CardContent className="flex items-center gap-3 pt-6">
-                  <div className="bg-info/10 p-2 rounded-lg dark:bg-info/20">
-                    <Calendar className="h-5 w-5 text-info-foreground" />
+                  <div className="bg-blue-100 p-2 rounded-lg">
+                    <Calendar className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{todayAppointments.length}</p>
@@ -220,8 +220,8 @@ export default function DoctorDashboard() {
 
               <Card>
                 <CardContent className="flex items-center gap-3 pt-6">
-                  <div className="bg-warning/10 p-2 rounded-lg dark:bg-warning/20">
-                    <Clock className="h-5 w-5 text-warning-foreground" />
+                  <div className="bg-yellow-100 p-2 rounded-lg">
+                    <Clock className="h-5 w-5 text-yellow-600" />
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{pendingAppointments.length}</p>
@@ -232,8 +232,8 @@ export default function DoctorDashboard() {
 
               <Card>
                 <CardContent className="flex items-center gap-3 pt-6">
-                  <div className="bg-success/10 p-2 rounded-lg dark:bg-success/20">
-                    <Activity className="h-5 w-5 text-success-foreground" />
+                  <div className="bg-green-100 p-2 rounded-lg">
+                    <Activity className="h-5 w-5 text-green-600" />
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{completedAppointments.length}</p>
@@ -244,8 +244,8 @@ export default function DoctorDashboard() {
 
               <Card>
                 <CardContent className="flex items-center gap-3 pt-6">
-                  <div className="bg-primary/10 p-2 rounded-lg dark:bg-primary/20">
-                    <Users className="h-5 w-5 text-primary-foreground dark:text-primary" />
+                  <div className="bg-purple-100 p-2 rounded-lg">
+                    <Users className="h-5 w-5 text-purple-600" />
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{appointments.length}</p>
@@ -318,7 +318,7 @@ export default function DoctorDashboard() {
                               size="sm"
                               variant="outline"
                               onClick={() => handleAppointmentAction(appointment._id, "reject")}
-                              className="border-error/20 text-error-foreground hover:bg-error/10 dark:border-error/30 dark:hover:bg-error/20"
+                              className="border-red-200 text-red-600 hover:bg-red-50"
                             >
                               <X className="h-4 w-4 mr-1" />
                               Reject
