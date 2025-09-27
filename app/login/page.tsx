@@ -40,7 +40,19 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Invalid email or password");
       } else {
-        router.push("/dashboard");
+        // Redirect based on user role and profile completion
+        const result = await signIn("credentials", {
+          email,
+          password,
+          redirect: false,
+        });
+
+        if (result?.error) {
+          setError("Invalid email or password");
+        } else {
+          // Let NextAuth handle the redirect automatically
+          window.location.href = "/dashboard";
+        }
         router.refresh();
       }
     } catch (error) {

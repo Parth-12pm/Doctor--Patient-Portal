@@ -1,5 +1,5 @@
-import mongoose, { Schema } from "mongoose"
-import type { IDoctor } from "@/lib/types"
+import mongoose, { Schema } from "mongoose";
+import type { IDoctor } from "@/lib/types";
 
 const DoctorSchema = new Schema<IDoctor>(
   {
@@ -46,6 +46,11 @@ const DoctorSchema = new Schema<IDoctor>(
       type: String,
       default: "",
     },
+    // Add this field to store Cloudinary public_id for deletions
+    profilePhotoPublicId: {
+      type: String,
+      default: "",
+    },
     availableSlots: [
       {
         day: {
@@ -69,15 +74,8 @@ const DoctorSchema = new Schema<IDoctor>(
   },
   {
     timestamps: true,
-  },
-)
-
-// Default blocked dates for weekends
-DoctorSchema.pre("save", function (next) {
-  if (this.isNew && this.blockedDates.length === 0) {
-    // Add default weekend blocking logic can be handled in application logic
   }
-  next()
-})
+);
 
-export default mongoose.models.Doctor || mongoose.model<IDoctor>("Doctor", DoctorSchema)
+export default mongoose.models.Doctor ||
+  mongoose.model<IDoctor>("Doctor", DoctorSchema);

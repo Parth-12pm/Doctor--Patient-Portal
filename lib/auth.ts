@@ -16,7 +16,7 @@ const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          return null;
+          throw new Error("Email and password are required");
         }
 
         try {
@@ -25,7 +25,7 @@ const authOptions: NextAuthOptions = {
           const user = await User.findOne({ email: credentials.email });
 
           if (!user) {
-            return null;
+            throw new Error("Invalid credentials");
           }
 
           const isPasswordValid = await bcrypt.compare(
@@ -34,7 +34,7 @@ const authOptions: NextAuthOptions = {
           );
 
           if (!isPasswordValid) {
-            return null;
+            throw new Error("Invalid credentials");
           }
 
           let profilePhoto: string | undefined = undefined;
@@ -43,14 +43,14 @@ const authOptions: NextAuthOptions = {
               const doctor = (await Doctor.findOne({
                 userId: user._id,
               }).lean()) as { profilePhoto?: string } | null;
-              if (doctor) {
+              if (doctor?.profilePhoto) {
                 profilePhoto = doctor.profilePhoto;
               }
             } else if (user.role === "patient") {
               const patient = (await Patient.findOne({
                 userId: user._id,
               }).lean()) as { profilePhoto?: string } | null;
-              if (patient) {
+              if (patient?.profilePhoto) {
                 profilePhoto = patient.profilePhoto;
               }
             }
@@ -65,7 +65,7 @@ const authOptions: NextAuthOptions = {
           };
         } catch (error) {
           console.error("Authorization error:", error);
-          return null;
+          throw new Error("Authentication failed");
         }
       },
     }),
@@ -75,42 +75,61 @@ const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
+      // Initial sign in
       if (user) {
         token.id = user.id;
         token.role = user.role;
         token.isProfileComplete = user.isProfileComplete;
         token.profilePhoto = user.profilePhoto;
       }
+
+      // Handle session updates
+      if (trigger === "update" && session?.user) {
+        // Update token with new session data
+        token.isProfileComplete =
+          session.user.isProfileComplete ?? token.isProfileComplete;
+        token.profilePhoto = session.user.profilePhoto ?? token.profilePhoto;
+      }
+
       return token;
     },
     async session({ session, token }) {
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          id: token.sub!,
-          role: token.role,
-          isProfileComplete: token.isProfileComplete,
-          profilePhoto: token.profilePhoto,
-        },
-      };
+      if (token && session.user) {
+        session.user.id = token.id as string;
+        session.user.role = token.role as string;
+        token.isProfileComplete =
+          (session.user as any).isProfileComplete ?? token.isProfileComplete;
+        token.profilePhoto =
+          (session.user as any).profilePhoto ?? token.profilePhoto;
+      }
+      return session;
+    },
+    async redirect({ url, baseUrl }) {
+      // Allows relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
     },
   },
   events: {
-    async signIn({ user }) {
-      // This event can be used to update the session if the profile photo changes
-      // For now, we'll just log it. A more advanced implementation could
-      // re-fetch the profile photo here.
-      if (user) {
-        // console.log("User signed in:", user.email);
+    async signIn({ user, isNewUser }) {
+      if (isNewUser) {
+        console.log("New user signed in:", user.email);
       }
+    },
+    async signOut() {
+      console.log("User signed out");
     },
   },
   pages: {
     signIn: "/login",
+    error: "/login", // Redirect errors to login page
   },
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === "development",
 };
 
 export const { handlers, auth, signIn, signOut } = NextAuth(authOptions);
+export { authOptions };

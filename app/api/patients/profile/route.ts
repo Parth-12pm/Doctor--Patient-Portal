@@ -5,6 +5,8 @@ import { requireRole } from "@/lib/auth-utils";
 import dbConnect from "@/lib/db";
 import Patient from "@/models/Patient";
 import User from "@/models/User";
+import { redirect } from "next/dist/server/api-utils";
+import { NextRouter } from "next/router";
 
 export async function POST(request: NextRequest) {
   try {
@@ -118,6 +120,7 @@ export async function PUT(request: NextRequest) {
       success: true,
       message: "Patient profile updated successfully",
       patient,
+      redirectUrl: "/patient/dashboard",
     });
   } catch (error: any) {
     console.error("Update patient profile error:", error);

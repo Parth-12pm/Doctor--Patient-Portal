@@ -1,39 +1,51 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { ArrowLeft, Save, User } from "lucide-react"
-import Link from "next/link"
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ArrowLeft, Save, User } from "lucide-react";
+import Link from "next/link";
 
 interface PatientFormData {
-  name: string
-  age: string
-  gender: "male" | "female" | "other" | ""
-  height: string
-  weight: string
-  bloodGroup: string
-  allergies: string
-  medicalHistory: string
+  name: string;
+  age: string;
+  gender: "male" | "female" | "other" | "";
+  height: string;
+  weight: string;
+  bloodGroup: string;
+  allergies: string;
+  medicalHistory: string;
   emergencyContact: {
-    name: string
-    phone: string
-    relation: string
-  }
+    name: string;
+    phone: string;
+    relation: string;
+  };
 }
 
 export default function PatientProfilePage() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [formData, setFormData] = useState<PatientFormData>({
     name: "",
     age: "",
@@ -48,35 +60,35 @@ export default function PatientProfilePage() {
       phone: "",
       relation: "",
     },
-  })
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
-  const [isEditing, setIsEditing] = useState(false)
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
-    if (status === "loading") return
+    if (status === "loading") return;
 
     if (!session) {
-      router.push("/login")
-      return
+      router.push("/login");
+      return;
     }
 
     if (session.user.role !== "patient") {
-      router.push("/dashboard")
-      return
+      router.push("/dashboard");
+      return;
     }
 
-    fetchProfile()
-  }, [session, status, router])
+    fetchProfile();
+  }, [session, status, router]);
 
   const fetchProfile = async () => {
     try {
-      const response = await fetch("/api/patients/profile")
+      const response = await fetch("/api/patients/profile");
       if (response.ok) {
-        const data = await response.json()
-        const patient = data.patient
+        const data = await response.json();
+        const patient = data.patient;
         setFormData({
           name: patient.name || "",
           age: patient.age?.toString() || "",
@@ -91,24 +103,24 @@ export default function PatientProfilePage() {
             phone: patient.emergencyContact?.phone || "",
             relation: patient.emergencyContact?.relation || "",
           },
-        })
-        setIsEditing(true)
+        });
+        setIsEditing(true);
       } else if (response.status === 404) {
         // Profile doesn't exist, user can create one
-        setIsEditing(false)
+        setIsEditing(false);
       }
     } catch (error) {
-      console.error("Error fetching profile:", error)
+      console.error("Error fetching profile:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSaving(true)
-    setError("")
-    setSuccess("")
+    e.preventDefault();
+    setIsSaving(true);
+    setError("");
+    setSuccess("");
 
     try {
       const payload = {
@@ -121,59 +133,64 @@ export default function PatientProfilePage() {
         allergies: formData.allergies,
         medicalHistory: formData.medicalHistory,
         emergencyContact: formData.emergencyContact,
-      }
+      };
 
-      const method = isEditing ? "PUT" : "POST"
+      const method = isEditing ? "PUT" : "POST";
       const response = await fetch("/api/patients/profile", {
         method,
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
-        setSuccess(isEditing ? "Profile updated successfully!" : "Profile created successfully!")
-        setIsEditing(true)
+        setSuccess(
+          isEditing
+            ? "Profile updated successfully!"
+            : "Profile created successfully!"
+        );
+        setIsEditing(true);
         setTimeout(() => {
-          router.push("/patient/dashboard")
-        }, 2000)
+          router.push("/patient/dashboard");
+          router.push(data.redirectUrl);
+        }, 2000);
       } else {
-        setError(data.error || "Failed to save profile")
+        setError(data.error || "Failed to save profile");
       }
     } catch (error) {
-      setError("An error occurred. Please try again.")
+      setError("An error occurred. Please try again.");
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   const handleInputChange = (field: string, value: string) => {
     if (field.startsWith("emergencyContact.")) {
-      const contactField = field.split(".")[1]
+      const contactField = field.split(".")[1];
       setFormData((prev) => ({
         ...prev,
         emergencyContact: {
           ...prev.emergencyContact,
           [contactField]: value,
         },
-      }))
+      }));
     } else {
       setFormData((prev) => ({
         ...prev,
         [field]: value,
-      }))
+      }));
     }
-  }
+  };
 
   if (status === "loading" || isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
       </div>
-    )
+    );
   }
 
   return (
@@ -192,7 +209,9 @@ export default function PatientProfilePage() {
               {isEditing ? "Edit Profile" : "Complete Your Profile"}
             </h1>
             <p className="text-muted-foreground mt-1">
-              {isEditing ? "Update your medical information" : "Please fill in your medical details"}
+              {isEditing
+                ? "Update your medical information"
+                : "Please fill in your medical details"}
             </p>
           </div>
         </div>
@@ -203,7 +222,9 @@ export default function PatientProfilePage() {
               <User className="h-5 w-5" />
               Patient Information
             </CardTitle>
-            <CardDescription>This information helps doctors provide better care</CardDescription>
+            <CardDescription>
+              This information helps doctors provide better care
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -215,7 +236,9 @@ export default function PatientProfilePage() {
 
               {success && (
                 <Alert className="border-green-200 bg-green-50">
-                  <AlertDescription className="text-green-800">{success}</AlertDescription>
+                  <AlertDescription className="text-green-800">
+                    {success}
+                  </AlertDescription>
                 </Alert>
               )}
 
@@ -229,7 +252,9 @@ export default function PatientProfilePage() {
                     <Input
                       id="name"
                       value={formData.name}
-                      onChange={(e) => handleInputChange("name", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("name", e.target.value)
+                      }
                       required
                     />
                   </div>
@@ -249,7 +274,12 @@ export default function PatientProfilePage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="gender">Gender *</Label>
-                    <Select value={formData.gender} onValueChange={(value) => handleInputChange("gender", value)}>
+                    <Select
+                      value={formData.gender}
+                      onValueChange={(value) =>
+                        handleInputChange("gender", value)
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select gender" />
                       </SelectTrigger>
@@ -265,7 +295,9 @@ export default function PatientProfilePage() {
                     <Label htmlFor="bloodGroup">Blood Group *</Label>
                     <Select
                       value={formData.bloodGroup}
-                      onValueChange={(value) => handleInputChange("bloodGroup", value)}
+                      onValueChange={(value) =>
+                        handleInputChange("bloodGroup", value)
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select blood group" />
@@ -291,7 +323,9 @@ export default function PatientProfilePage() {
                       min="30"
                       max="300"
                       value={formData.height}
-                      onChange={(e) => handleInputChange("height", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("height", e.target.value)
+                      }
                       required
                     />
                   </div>
@@ -305,7 +339,9 @@ export default function PatientProfilePage() {
                       max="500"
                       step="0.1"
                       value={formData.weight}
-                      onChange={(e) => handleInputChange("weight", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("weight", e.target.value)
+                      }
                       required
                     />
                   </div>
@@ -322,7 +358,9 @@ export default function PatientProfilePage() {
                     id="allergies"
                     placeholder="List any allergies (medications, food, environmental, etc.)"
                     value={formData.allergies}
-                    onChange={(e) => handleInputChange("allergies", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("allergies", e.target.value)
+                    }
                     rows={3}
                   />
                 </div>
@@ -333,7 +371,9 @@ export default function PatientProfilePage() {
                     id="medicalHistory"
                     placeholder="Previous surgeries, chronic conditions, medications, etc."
                     value={formData.medicalHistory}
-                    onChange={(e) => handleInputChange("medicalHistory", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("medicalHistory", e.target.value)
+                    }
                     rows={4}
                   />
                 </div>
@@ -349,7 +389,12 @@ export default function PatientProfilePage() {
                     <Input
                       id="emergencyName"
                       value={formData.emergencyContact.name}
-                      onChange={(e) => handleInputChange("emergencyContact.name", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "emergencyContact.name",
+                          e.target.value
+                        )
+                      }
                       required
                     />
                   </div>
@@ -360,7 +405,12 @@ export default function PatientProfilePage() {
                       id="emergencyPhone"
                       type="tel"
                       value={formData.emergencyContact.phone}
-                      onChange={(e) => handleInputChange("emergencyContact.phone", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "emergencyContact.phone",
+                          e.target.value
+                        )
+                      }
                       required
                     />
                   </div>
@@ -371,7 +421,12 @@ export default function PatientProfilePage() {
                       id="emergencyRelation"
                       placeholder="e.g., Spouse, Parent, Sibling, Friend"
                       value={formData.emergencyContact.relation}
-                      onChange={(e) => handleInputChange("emergencyContact.relation", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "emergencyContact.relation",
+                          e.target.value
+                        )
+                      }
                       required
                     />
                   </div>
@@ -403,5 +458,5 @@ export default function PatientProfilePage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

@@ -1,21 +1,52 @@
-export { signIn, signOut } from "next-auth/react"
-export { useSession } from "next-auth/react"
-export { getSession } from "next-auth/react"
+import { signIn, signOut, useSession, getSession } from "next-auth/react";
 
-// Custom signUp function since NextAuth doesn't have built-in registration
+// Enhanced signUp function with better error handling
 export const signUp = async (email: string, password: string, role: string) => {
-  const response = await fetch("/api/auth/register", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email, password, role }),
-  })
+  try {
+    const response = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password, role }),
+    });
 
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.error || "Registration failed")
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Registration failed");
+    }
+
+    return data;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error("Registration failed");
   }
+};
 
-  return response.json()
-}
+// Helper function to handle authentication
+export const authenticateUser = async (email: string, password: string) => {
+  try {
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    if (result?.error) {
+      throw new Error("Invalid credentials");
+    }
+
+    return result;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error("Authentication failed");
+  }
+};
+
+// Export signIn, signOut, useSession, getSession for use in components
+export { signIn, signOut, useSession, getSession };

@@ -1,5 +1,5 @@
-import mongoose, { Schema } from "mongoose"
-import type { IPatient } from "@/lib/types"
+import mongoose, { Schema } from "mongoose";
+import type { IPatient } from "@/lib/types";
 
 const PatientSchema = new Schema<IPatient>(
   {
@@ -49,6 +49,15 @@ const PatientSchema = new Schema<IPatient>(
       type: String,
       default: "",
     },
+    // Add profilePhoto field for patients too if needed
+    profilePhoto: {
+      type: String,
+      default: "",
+    },
+    profilePhotoPublicId: {
+      type: String,
+      default: "",
+    },
     emergencyContact: {
       name: {
         type: String,
@@ -66,7 +75,8 @@ const PatientSchema = new Schema<IPatient>(
   },
   {
     timestamps: true,
-  },
-)
+  }
+);
 
-export default mongoose.models.Patient || mongoose.model<IPatient>("Patient", PatientSchema)
+export default mongoose.models.Patient ||
+  mongoose.model<IPatient>("Patient", PatientSchema);
