@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { type Session } from "next-auth";
 import { doctorProfileSchema } from "@/lib/validations";
 import { requireRole } from "@/lib/auth-utils";
 import dbConnect from "@/lib/db";
@@ -7,13 +8,13 @@ import User from "@/models/User";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireRole("doctor");
+    const session = (await requireRole("doctor")) as Session;
     await dbConnect();
 
     const body = await request.json();
 
     // Validate input
-    const validatedData = doctorProfileSchema.parse(body);
+    const validatedData = doctorProfileSchema.passthrough().parse(body);
 
     // Check if profile already exists
     const existingProfile = await Doctor.findOne({ userId: session.user.id });
@@ -26,9 +27,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Create doctor profile
+    const { availableSlots, ...restOfValidatedData } = validatedData;
     const doctor = new Doctor({
       userId: session.user.id,
-      ...validatedData,
+      ...restOfValidatedData,
+      // Initialize with default available slots
+      availableSlots: availableSlots || [],
       // Initialize with default blocked dates (weekends)
       blockedDates: [],
     });
@@ -51,7 +55,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error("  Doctor profile creation error:", error);
+    console.error("Doctor profile creation error:", error);
 
     if (error.name === "ZodError") {
       return NextResponse.json(
@@ -69,24 +73,19 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireRole("doctor");
+    const session = (await requireRole("doctor")) as Session;
     await dbConnect();
 
     const doctor = await Doctor.findOne({ userId: session.user.id });
 
-    if (!doctor) {
-      return NextResponse.json(
-        { error: "Doctor profile not found" },
-        { status: 404 }
-      );
-    }
-
+    // Return success even if no profile exists - let the frontend handle it
     return NextResponse.json({
       success: true,
-      doctor,
+      doctor: doctor || null,
+      hasProfile: !!doctor,
     });
   } catch (error: any) {
-    console.error("  Get doctor profile error:", error);
+    console.error("Get doctor profile error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -96,13 +95,13 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const session = await requireRole("doctor");
+    const session = (await requireRole("doctor")) as Session;
     await dbConnect();
 
     const body = await request.json();
 
     // Validate input
-    const validatedData = doctorProfileSchema.parse(body);
+    const validatedData = doctorProfileSchema.passthrough().parse(body);
 
     const doctor = await Doctor.findOneAndUpdate(
       { userId: session.user.id },
@@ -126,7 +125,7 @@ export async function PUT(request: NextRequest) {
       doctor,
     });
   } catch (error: any) {
-    console.error("  Update doctor profile error:", error);
+    console.error("Update doctor profile error:", error);
 
     if (error.name === "ZodError") {
       return NextResponse.json(

@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { type Session } from "next-auth";
 import { requireRole } from "@/lib/auth-utils";
 import dbConnect from "@/lib/db";
 import Appointment from "@/models/Appointment";
@@ -6,7 +7,7 @@ import Doctor from "@/models/Doctor";
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireRole("doctor");
+    const session = (await requireRole("doctor")) as Session;
     await dbConnect();
 
     const { searchParams } = new URL(request.url);

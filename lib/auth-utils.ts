@@ -1,40 +1,34 @@
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "./auth"
-import { redirect } from "next/navigation"
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "./auth";
+import { NextResponse } from "next/server";
 
 export async function getServerSessionData() {
-  const session = await getServerSession(authOptions)
-  return session
+  return await getServerSession(authOptions);
 }
 
 export async function requireAuth() {
-  const session = await getServerSessionData()
+  const session = await getServerSessionData();
 
   if (!session) {
-    redirect("/login")
+    throw new Error("Not authenticated");
   }
 
-  return session
+  return session;
 }
 
-export async function requireRole(role: "doctor" | "patient") {
-  const session = await requireAuth()
+export async function requireRole(requiredRole: "doctor" | "patient") {
+  const session = await getServerSessionData();
 
-  if (session.user.role !== role) {
-    const redirectPath = session.user.role === "doctor" ? "/doctor/dashboard" : "/patient/dashboard"
-    redirect(redirectPath)
+  if (!session) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  return session
-}
-
-export async function requireProfileComplete() {
-  const session = await requireAuth()
-
-  if (!session.user.isProfileComplete) {
-    const profilePath = session.user.role === "doctor" ? "/doctor/profile/setup" : "/patient/profile/setup"
-    redirect(profilePath)
+  if (session.user.role !== requiredRole) {
+    return NextResponse.json(
+      { error: "Insufficient permissions" },
+      { status: 403 }
+    );
   }
 
-  return session
+  return session;
 }
