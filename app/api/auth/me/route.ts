@@ -3,10 +3,11 @@ import { getServerSessionData } from "@/lib/auth-utils";
 import dbConnect from "@/lib/db";
 import Patient from "@/models/Patient";
 import Doctor from "@/models/Doctor";
+import { Session } from "next-auth";
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSessionData();
+    const session: Session | null = await getServerSessionData();
 
     if (!session) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
