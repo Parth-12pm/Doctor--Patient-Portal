@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth-utils";
 import dbConnect from "@/lib/db";
 import Appointment from "@/models/Appointment";
+import { Session } from "next-auth";
 import Doctor from "@/models/Doctor";
 import { z } from "zod";
 
@@ -13,7 +14,7 @@ const rescheduleSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireRole("doctor");
+    const session = (await requireRole("doctor")) as Session;
     await dbConnect();
 
     const body = await request.json();
@@ -51,13 +52,13 @@ export async function POST(request: NextRequest) {
     }
 
     const newDate = new Date(validatedData.newDate);
-    const dayOfWeek = newDate.toLocaleDateString("en-US", {
-      weekday: "lowercase",
-    });
+    const dayOfWeek = newDate
+      .toLocaleDateString("en-US", { weekday: "long" })
+      .toLowerCase();
 
     // Check if doctor is available on new date/time
     const dayAvailability = doctor.availableSlots.find(
-      (slot) => slot.day === dayOfWeek
+      (slot: { day: string; }) => slot.day === dayOfWeek
     );
     if (
       !dayAvailability ||

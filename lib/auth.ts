@@ -1,4 +1,4 @@
-import { NextAuthOptions } from "next-auth";
+import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import dbConnect from "@/lib/db";
@@ -85,13 +85,16 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id;
-        session.user.role = token.role;
-        session.user.isProfileComplete = token.isProfileComplete;
-        session.user.profilePhoto = token.profilePhoto;
-      }
-      return session;
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: token.sub!,
+          role: token.role,
+          isProfileComplete: token.isProfileComplete,
+          profilePhoto: token.profilePhoto,
+        },
+      };
     },
   },
   events: {
@@ -109,3 +112,5 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
+
+export const { handlers, auth, signIn, signOut } = NextAuth(authOptions);

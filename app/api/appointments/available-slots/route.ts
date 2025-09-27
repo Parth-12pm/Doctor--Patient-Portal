@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+
 import { type NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth-utils";
 import dbConnect from "@/lib/db";
@@ -28,13 +31,13 @@ export async function GET(request: NextRequest) {
     }
 
     const appointmentDate = new Date(date);
-    const dayOfWeek = appointmentDate.toLocaleDateString("en-US", {
-      weekday: "lowercase",
-    });
+    const dayOfWeek = appointmentDate
+      .toLocaleDateString("en-US", { weekday: "long" })
+      .toLowerCase();
 
     // Check if doctor works on this day
     const dayAvailability = doctor.availableSlots.find(
-      (slot) => slot.day === dayOfWeek
+      (slot: { day: string; }) => slot.day === dayOfWeek
     );
     if (!dayAvailability) {
       return NextResponse.json({
@@ -46,7 +49,7 @@ export async function GET(request: NextRequest) {
 
     // Check if date is blocked
     const isBlocked = doctor.blockedDates.some(
-      (blockedDate) =>
+      (blockedDate: { toDateString: () => string; }) =>
         blockedDate.toDateString() === appointmentDate.toDateString()
     );
     if (isBlocked) {
@@ -89,7 +92,7 @@ export async function GET(request: NextRequest) {
 
     // Filter available slots
     const availableSlots = dayAvailability.timeSlots.filter(
-      (slot) => !bookedSlots.includes(slot)
+      (slot: any) => !bookedSlots.includes(slot)
     );
 
     return NextResponse.json({

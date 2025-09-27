@@ -3,10 +3,11 @@ import { getServerSessionData } from "@/lib/auth-utils";
 import { deleteFromCloudinary } from "@/lib/cloudinary";
 import dbConnect from "@/lib/db";
 import Doctor from "@/models/Doctor";
+import { type Session } from "next-auth";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSessionData();
+    const session = (await getServerSessionData()) as Session;
     if (!session) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSessionData();
+    const session = (await getServerSessionData()) as Session;
     if (!session) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }

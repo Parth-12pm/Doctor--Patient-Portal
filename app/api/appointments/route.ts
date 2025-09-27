@@ -34,13 +34,13 @@ export async function POST(request: NextRequest) {
     }
 
     const appointmentDate = new Date(validatedData.appointmentDate);
-    const dayOfWeek = appointmentDate.toLocaleDateString("en-US", {
-      weekday: "lowercase",
-    });
+    const dayOfWeek = appointmentDate
+      .toLocaleDateString("en-US", { weekday: "long" })
+      .toLowerCase();
 
     // Check if doctor is available on this day
     const dayAvailability = doctor.availableSlots.find(
-      (slot) => slot.day === dayOfWeek
+      (slot: { day: string }) => slot.day === dayOfWeek
     );
     if (
       !dayAvailability ||
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     // Check if date is blocked
     const isBlocked = doctor.blockedDates.some(
-      (blockedDate) =>
+      (blockedDate: { toDateString: () => string }) =>
         blockedDate.toDateString() === appointmentDate.toDateString()
     );
     if (isBlocked) {

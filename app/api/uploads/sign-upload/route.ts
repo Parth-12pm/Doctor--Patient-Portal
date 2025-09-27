@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 import { getServerSessionData } from "@/lib/auth-utils";
+import { type Session } from "next-auth";
 
 export async function POST(request: Request) {
-  const session = await getServerSessionData();
+  const session = (await getServerSessionData()) as Session;
   if (!session || session.user.role !== "doctor") {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
