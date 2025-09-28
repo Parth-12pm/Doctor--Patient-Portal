@@ -28,18 +28,18 @@ export default withAuth(
       }
 
       // Redirect to profile creation if profile is incomplete
-      if (!token.isProfileComplete) {
-        const profileRoutes = ["/doctor/profile", "/patient/profile"];
-        const isProfileRoute = profileRoutes.some((route) =>
-          pathname.startsWith(route)
-        );
+      // if (!token.isProfileComplete) {
+      //   const profileRoutes = ["/doctor/profile", "/patient/profile"];
+      //   const isProfileRoute = profileRoutes.some((route) =>
+      //     pathname.startsWith(route)
+      //   );
 
-        if (!isProfileRoute && !pathname.startsWith("/api")) {
-          const redirectUrl =
-            userRole === "doctor" ? "/doctor/profile/" : "/patient/profile";
-          return NextResponse.redirect(new URL(redirectUrl, req.url));
-        }
-      }
+      //   if (!isProfileRoute && !pathname.startsWith("/api")) {
+      //     const redirectUrl =
+      //       userRole === "doctor" ? "/doctor/profile/" : "/patient/profile";
+      //     return NextResponse.redirect(new URL(redirectUrl, req.url));
+      //   }
+      // }
     }
 
     return NextResponse.next();
