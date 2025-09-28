@@ -89,7 +89,7 @@ export default function DoctorCalendarPage() {
   ) => {
     try {
       const response = await fetch(`/api/appointments/${appointmentId}`, {
-        method: "PATCH",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },

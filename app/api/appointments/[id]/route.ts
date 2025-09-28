@@ -8,15 +8,15 @@ import { sendEmail, emailTemplates } from "@/lib/email";
 import { type Session } from "next-auth";
 import { format } from "date-fns";
 
-export async function PATCH(
+export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = (await requireRole("doctor")) as Session;
     await dbConnect();
 
-    const { id } = params;
+    const id = (await params).id;
     const body = await request.json();
     const { status } = body;
 
