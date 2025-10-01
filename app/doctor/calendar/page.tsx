@@ -393,8 +393,10 @@ export default function DoctorCalendarPage() {
                                 <h4 className="font-medium">
                                   {appointment.patientType === "family" &&
                                   appointment.familyMemberDetails
-                                    ? appointment.familyMemberDetails.name
-                                    : appointment.patientId.name}
+                                    ? appointment.familyMemberDetails.name ??
+                                      "Unknown Patient"
+                                    : appointment.patientId?.name ??
+                                      "Unknown Patient"}
                                 </h4>
                                 <Badge
                                   className={getUrgencyColor(
@@ -412,14 +414,19 @@ export default function DoctorCalendarPage() {
                                 appointment.familyMemberDetails ? (
                                   <>
                                     {appointment.familyMemberDetails.age} years,{" "}
-                                    {appointment.familyMemberDetails.gender}•
-                                    Booked by: {appointment.patientId.name} (
+                                    {appointment.familyMemberDetails.gender} •
+                                    Booked by:{" "}
+                                    {appointment.patientId?.name ?? "N/A"} (
                                     {appointment.familyMemberDetails.relation})
                                   </>
                                 ) : (
                                   <>
-                                    {appointment.patientId.age} years,{" "}
-                                    {appointment.patientId.gender}
+                                    {appointment.patientId && (
+                                      <>
+                                        {appointment.patientId.age} years,{" "}
+                                        {appointment.patientId.gender}
+                                      </>
+                                    )}
                                   </>
                                 )}
                               </p>
