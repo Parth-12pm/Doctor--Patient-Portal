@@ -72,13 +72,12 @@
     "zod": "4.1.11"
   },
   "devDependencies": {
-    "@eslint/js": "^9.36.0",
     "@tailwindcss/postcss": "^4.1.13",
     "@types/node": "^24.5.2",
     "@types/nodemailer": "^7.0.1",
     "@types/react": "^19.1.14",
     "@types/react-dom": "^19.1.9",
-    "eslint": "^9.36.0",
+    "eslint": "^8.57.1",
     "eslint-config-next": "^15.5.4",
     "globals": "^16.4.0",
     "postcss": "^8.5.6",
