@@ -396,7 +396,7 @@ export default function PatientAppointmentsPage() {
                       {new Date(appointment.createdAt).toLocaleDateString()}
                     </span>
                     <span>
-                      Consultation Fee: ${appointment.doctorId.consultationFee}
+                      Consultation Fee: ₹{appointment.doctorId.consultationFee}
                     </span>
                   </div>
                 </CardContent>

@@ -512,7 +512,7 @@ export default function DoctorDashboard() {
                     <p className="text-sm text-muted-foreground">
                       Consultation Fee
                     </p>
-                    <p className="font-medium">${profile.consultationFee}</p>
+                    <p className="font-medium">₹{profile.consultationFee}</p>
                   </div>
                   <Link href="/doctor/profile">
                     <Button
